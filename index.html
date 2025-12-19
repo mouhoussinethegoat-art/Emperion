@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aether Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg:#070b14;
+  --panel:#0d1322;
+  --panel2:#0b1020;
+  --border:#1b2338;
+  --text:#e6e9f0;
+  --muted:#8b94ad;
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#facc15;
+}
+
+* { box-sizing:border-box; font-family:Inter,system-ui,sans-serif; }
+
+body {
+  margin:0;
+  background:radial-gradient(circle at top,#0b1020,var(--bg));
+  color:var(--text);
+}
+
+.hidden { display:none; }
+
+nav {
+  height:64px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 24px;
+  border-bottom:1px solid var(--border);
+  background:#090f1f;
+}
+
+.logo {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-weight:700;
+}
+
+.logo span {
+  background:var(--blue);
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  border-radius:8px;
+}
+
+.badge {
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  border:1px solid;
+}
+
+.badge.red { color:var(--red); border-color:#3a161c; background:#2a0f14; }
+.badge.green { color:var(--green); border-color:#1f3a2b; background:#0f2a1c; }
+
+.container {
+  max-width:1200px;
+  margin:32px auto;
+  padding:0 20px;
+}
+
+h1 { text-align:center; }
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+
+.card {
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+}
+
+.card small { color:var(--muted); }
+.value { font-size:22px; font-weight:600; margin-top:6px; }
+
+input,button {
+  width:100%;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#070b14;
+  color:white;
+}
+
+button {
+  background:var(--blue);
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+}
+
+button.alt { background:#111827; }
+
+.row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+.plan {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#090f1f;
+}
+
+@media(max-width:900px){ .row{grid-template-columns:1fr;} }
+</style>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo"><span>⚡</span>AETHER</div>
+  <div id="navRight"></div>
+</nav>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="card" style="max-width:400px;margin:60px auto;">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username">
+    <button onclick="login()" style="margin-top:10px;">Login</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+  <h1>DASHBOARD</h1>
+  <p style="text-align:center;color:var(--muted)">Welcome back</p>
+
+  <div class="grid" style="margin-top:24px;">
+    <div class="card">
+      <small>Status</small>
+      <div id="status" class="value red">INACTIVE</div>
+    </div>
+    <div class="card">
+      <small>Plan</small>
+      <div id="plan" class="value">NONE</div>
+    </div>
+    <div class="card">
+      <small>Time Left</small>
+      <div id="time" class="value yellow">N/A</div>
+    </div>
+    <div class="card">
+      <small>Balance</small>
+      <div id="balance" class="value green">$0.00</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <strong>Redeem Key</strong>
+    <input id="key" placeholder="AETHER-XXXX" style="margin-top:10px;">
+    <button onclick="redeem()" style="margin-top:10px;">Redeem</button>
+  </div>
+
+  <div class="row" style="margin-top:24px;">
+    <div class="card">
+      <strong>Deposit Balance</strong>
+      <input id="deposit" placeholder="Amount">
+      <button onclick="deposit()" style="margin-top:10px;">Deposit</button>
+    </div>
+
+    <div class="card">
+      <strong>Purchase Plan</strong>
+      <div class="plan">
+        <div>
+          <strong>Elite</strong><br>
+          <small>$25</small>
+        </div>
+        <button onclick="buy('ELITE',25)">Buy</button>
+      </div>
+      <div class="plan">
+        <div>
+          <strong>Premium</strong><br>
+          <small>$15</small>
+        </div>
+        <button onclick="buy('PREMIUM',15)">Buy</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="alt" onclick="logout()" style="margin-top:24px;">Logout</button>
+</div>
+
+</div>
+
+<script>
+let user = JSON.parse(localStorage.getItem("aetherUser"));
+
+function save(){ localStorage.setItem("aetherUser",JSON.stringify(user)); }
+
+function login(){
+  const name = username.value.trim();
+  if(!name) return;
+  user = { name, balance:0, plan:"NONE" };
+  save(); render();
+}
+
+function logout(){
+  localStorage.removeItem("aetherUser");
+  location.reload();
+}
+
+function deposit(){
+  user.balance += Number(deposit.value || 0);
+  save(); render();
+}
+
+function buy(plan,price){
+  if(user.balance < price) return alert("Not enough balance");
+  user.balance -= price;
+  user.plan = plan;
+  save(); render();
+}
+
+function redeem(){
+  if(key.value === "AETHER-TEST"){
+    user.plan = "ELITE";
+    save(); render();
+  } else alert("Invalid key");
+}
+
+function render(){
+  loginDiv.classList.toggle("hidden", !!user);
+  dashboard.classList.toggle("hidden", !user);
+
+  if(!user) return;
+
+  navRight.innerHTML = `
+    <div class="badge ${user.plan==="NONE"?"red":"green"}">
+      ${user.plan==="NONE"?"NO ACTIVE PLAN":user.plan}
+    </div>
+    <strong>${user.name}</strong>
+  `;
+
+  balance.textContent = `$${user.balance.toFixed(2)}`;
+  plan.textContent = user.plan;
+  status.textContent = user.plan==="NONE"?"INACTIVE":"ACTIVE";
+}
+
+const loginDiv = document.getElementById("login");
+const dashboard = document.getElementById("dashboard");
+const navRight = document.getElementById("navRight");
+
+render();
+</script>
+
+</body>
+</html>
